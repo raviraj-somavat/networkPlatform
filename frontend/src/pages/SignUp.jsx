@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, AtSign, Eye, EyeOff, ArrowRight, Check } from 'lucide-react';
 import AuthLayout from '../components/AuthLayout';
+import { useAuth } from '../context/AuthContext';
 
 const GoogleIcon = () => (
   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -53,6 +54,8 @@ const SignUp = () => {
     }));
   };
 
+  const { signUp } = useAuth();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -64,25 +67,16 @@ const SignUp = () => {
     }
 
     setLoading(true);
-    try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setSuccessMsg('Account created successfully! Redirecting...');
-        setTimeout(() => {
-          navigate('/signin');
-        }, 1500);
-      } else {
-        setErrorMsg(data.msg || 'Signup failed. Please try again.');
-      }
-    } catch {
-      setErrorMsg('Could not connect to authentication service.');
-    } finally {
-      setLoading(false);
+    const result = await signUp(formData);
+    setLoading(false);
+
+    if (result.success) {
+      setSuccessMsg(result.data?.msg || 'Account created successfully! Redirecting...');
+      setTimeout(() => {
+        navigate('/');
+      }, 1200);
+    } else {
+      setErrorMsg(result.error || 'Signup failed. Please try again.');
     }
   };
 

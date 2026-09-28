@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Check } from 'lucide-react';
 import AuthLayout from '../components/AuthLayout';
+import { useAuth } from '../context/AuthContext';
 
 const GoogleIcon = () => (
   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -50,31 +51,24 @@ const SignIn = () => {
     }));
   };
 
+  const { signIn } = useAuth();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
     setLoading(true);
 
-    try {
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setSuccessMsg('Signed in successfully! Redirecting...');
-        setTimeout(() => {
-          navigate('/');
-        }, 1200);
-      } else {
-        setErrorMsg(data.msg || 'Sign in failed. Please check your credentials.');
-      }
-    } catch {
-      setErrorMsg('Could not connect to authentication service.');
-    } finally {
-      setLoading(false);
+    const result = await signIn(formData);
+    setLoading(false);
+
+    if (result.success) {
+      setSuccessMsg(result.data?.msg || 'Signed in successfully! Redirecting...');
+      setTimeout(() => {
+        navigate('/');
+      }, 1200);
+    } else {
+      setErrorMsg(result.error || 'Sign in failed. Please check your credentials.');
     }
   };
 
